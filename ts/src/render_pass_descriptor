@@ -1,0 +1,24 @@
+/*
+export class RenderPassDescriptor {
+    private label: string;
+    private colorAttachments: GPURenderPassColorAttachment[];
+
+    public constructor(label: string, view: GPUTextureView, clearValue: GPUColor = { r:0, g:0, b:0, a:1 }, loadOp: GPULoadOp = 'clear', storeOp: GPUStoreOp = 'store') {
+        this.label = label;
+
+        this.colorAttachments = [{
+            view: view,
+            clearValue: clearValue,
+            loadOp: loadOp,
+            storeOp: storeOp
+        }] as GPURenderPassColorAttachment[];
+    }
+
+    public create(): GPURenderPassDescriptor {
+        return {
+            label: this.label,
+            colorAttachments: this.colorAttachments
+        };
+    }
+}
+*/
