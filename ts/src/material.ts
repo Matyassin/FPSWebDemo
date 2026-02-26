@@ -28,10 +28,11 @@ export class Material {
                 entryPoint: shader.vertEntry,
                 module: shader.module,
                 buffers: [{
-                    arrayStride: 4*5, // x, y, z, u, v -> for now this is correct for every material
+                    arrayStride: 4*8, // x, y, z, u, v, nx, ny, nz
                     attributes: [
                         { shaderLocation: 0, offset: 0,   format: 'float32x3' },
                         { shaderLocation: 1, offset: 3*4, format: 'float32x2' },
+                        { shaderLocation: 2, offset: 5*4, format: 'float32x3' },
                     ]
                 }],
             },
