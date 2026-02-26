@@ -1,14 +1,18 @@
 export class Shader {
-    label;
-    shaderCode;
-    constructor(label, code) {
-        this.label = label;
-        this.shaderCode = code;
+    module;
+    vertEntry;
+    fragEntry;
+    constructor(module, vertEntry = 'vert', fragEntry = 'frag') {
+        this.module = module;
+        this.vertEntry = vertEntry;
+        this.fragEntry = fragEntry;
     }
-    create(device) {
-        return device.createShaderModule({
-            label: this.label,
-            code: this.shaderCode
+    static async load(device, path) {
+        const code = await fetch(path).then(r => r.text());
+        const module = device.createShaderModule({
+            label: path,
+            code: code
         });
+        return new Shader(module);
     }
 }

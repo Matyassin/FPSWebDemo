@@ -1,16 +1,21 @@
 export class Shader {
-    private label: string;
-    private shaderCode: string;
-
-    public constructor(label: string, code: string) {
-        this.label = label;
-        this.shaderCode = code;
+    public readonly module: GPUShaderModule;
+    public readonly vertEntry: string;
+    public readonly fragEntry: string;
+    
+    public constructor(module: GPUShaderModule, vertEntry: string = 'vert', fragEntry: string = 'frag') {
+        this.module = module;
+        this.vertEntry = vertEntry;
+        this.fragEntry = fragEntry;
     }
 
-    public create(device: GPUDevice): GPUShaderModule {
-        return device.createShaderModule({
-            label: this.label,
-            code: this.shaderCode
+    public static async load(device: GPUDevice, path: string): Promise<Shader> {
+        const code = await fetch(path).then(r => r.text());
+        const module = device.createShaderModule({
+            label: path,
+            code: code
         });
+
+        return new Shader(module);
     }
 }

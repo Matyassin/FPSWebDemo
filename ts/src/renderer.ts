@@ -1,52 +1,60 @@
-import { Shader } from "./shader.js";
-import { PipelineAsset } from "./pipeline_asset.js";
+import { Camera } from "./camera.js";
+import { Entity } from "./entity.js";
+import { MeshComponent } from "./mesh.js";
+import { Texture } from "./texture.js";
 
 export class Renderer {
     private device: GPUDevice;
+    private canvas: HTMLCanvasElement;
     private context: GPUCanvasContext;
-    private textureFormat: GPUTextureFormat;
-    private renderPassDescriptor!: GPURenderPassDescriptor;
-    private pipeline!: GPURenderPipeline;
+    private depthTexture!: GPUTexture;
 
-    public constructor(device: GPUDevice, context: GPUCanvasContext, texFormat: GPUTextureFormat) {
+    public constructor(device: GPUDevice, canvas: HTMLCanvasElement, ctx: GPUCanvasContext, texFormat: GPUTextureFormat) {
         this.device = device;
-        this.context = context;
-        this.textureFormat = texFormat;
+        this.context = ctx;
+        this.canvas = canvas;
+
+        this.context.configure({ device: device, format: texFormat });
+
+        this.resize();
+        new ResizeObserver(() => this.resize()).observe(canvas);
     }
 
-    public async setup() : Promise<void> {
-        this.context.configure({
-            device: this.device,
-            format:this.textureFormat
-        });
+    private resize(): void {
+        this.canvas.width = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+        this.depthTexture?.destroy();
+        this.depthTexture = Texture.createDepthTexture(this.device, this.canvas.width, this.canvas.height);
+    }
 
-        const shader = new Shader('red triangle shader', await fetch('../../assets/shaders/test.wgsl').then(r => r.text()));
-        const pipeline = new PipelineAsset('red triangle pipeline');
-        this.pipeline = pipeline.create(this.device, shader.create(this.device), this.textureFormat);
-
-        this.renderPassDescriptor = {
-            label: '',
+    public drawFrame(camera: Camera, entities: Entity[]): void {
+        const encoder = this.device.createCommandEncoder();
+        const pass = encoder.beginRenderPass({
             colorAttachments: [{
                 view: this.context.getCurrentTexture().createView(),
-                clearValue: { r: 0.3, g: 0.3, b: 0.3, a: 1 },
+                clearValue: { r: 0.1, g: 0.1, b: 0.15, a: 1 },
                 loadOp: 'clear',
-                storeOp: 'store'
-            }] as GPURenderPassColorAttachment[]
-        };
-    }
+                storeOp: 'store',
+            }],
+            depthStencilAttachment: {
+                view: this.depthTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+            },
+        });
 
-    public render() : void {
-        const colorAttachments: GPURenderPassColorAttachment[] = this.renderPassDescriptor.colorAttachments as GPURenderPassColorAttachment[];
-        colorAttachments[0].view = this.context.getCurrentTexture().createView();
+        for (const entity of entities) {
+            const mesh = entity.getComponent(MeshComponent);
+            if (!mesh)
+                continue;
 
-        const encoder: GPUCommandEncoder = this.device.createCommandEncoder();
-        const pass: GPURenderPassEncoder = encoder.beginRenderPass(this.renderPassDescriptor);
+            camera.update(entity.transform);
+            mesh.updateMVP(this.device, camera.mvpData);
+            mesh.draw(pass);
+        }
 
-        pass.setPipeline(this.pipeline);
-        pass.draw(3); // call our vertex shader 3 times.
         pass.end();
-
-        const commandBuffer: GPUCommandBuffer = encoder.finish();
-        this.device.queue.submit([commandBuffer]);
+        this.device.queue.submit([encoder.finish()]);
     }
 }

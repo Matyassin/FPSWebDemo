@@ -1,43 +1,49 @@
-import { Shader } from "./shader.js";
-import { PipelineAsset } from "./pipeline_asset.js";
+import { MeshComponent } from "./mesh.js";
+import { Texture } from "./texture.js";
 export class Renderer {
     device;
+    canvas;
     context;
-    textureFormat;
-    renderPassDescriptor;
-    pipeline;
-    constructor(device, context, texFormat) {
+    depthTexture;
+    constructor(device, canvas, ctx, texFormat) {
         this.device = device;
-        this.context = context;
-        this.textureFormat = texFormat;
+        this.context = ctx;
+        this.canvas = canvas;
+        this.context.configure({ device: device, format: texFormat });
+        this.resize();
+        new ResizeObserver(() => this.resize()).observe(canvas);
     }
-    async setup() {
-        this.context.configure({
-            device: this.device,
-            format: this.textureFormat
-        });
-        const shader = new Shader('red triangle shader', await fetch('../../assets/shaders/test.wgsl').then(r => r.text()));
-        const pipeline = new PipelineAsset('red triangle pipeline');
-        this.pipeline = pipeline.create(this.device, shader.create(this.device), this.textureFormat);
-        this.renderPassDescriptor = {
-            label: '',
+    resize() {
+        this.canvas.width = this.canvas.clientWidth;
+        this.canvas.height = this.canvas.clientHeight;
+        this.depthTexture?.destroy();
+        this.depthTexture = Texture.createDepthTexture(this.device, this.canvas.width, this.canvas.height);
+    }
+    drawFrame(camera, entities) {
+        const encoder = this.device.createCommandEncoder();
+        const pass = encoder.beginRenderPass({
             colorAttachments: [{
                     view: this.context.getCurrentTexture().createView(),
-                    clearValue: { r: 0.3, g: 0.3, b: 0.3, a: 1 },
+                    clearValue: { r: 0.1, g: 0.1, b: 0.15, a: 1 },
                     loadOp: 'clear',
-                    storeOp: 'store'
-                }]
-        };
-    }
-    render() {
-        const colorAttachments = this.renderPassDescriptor.colorAttachments;
-        colorAttachments[0].view = this.context.getCurrentTexture().createView();
-        const encoder = this.device.createCommandEncoder();
-        const pass = encoder.beginRenderPass(this.renderPassDescriptor);
-        pass.setPipeline(this.pipeline);
-        pass.draw(3); // call our vertex shader 3 times.
+                    storeOp: 'store',
+                }],
+            depthStencilAttachment: {
+                view: this.depthTexture.createView(),
+                depthClearValue: 1.0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+            },
+        });
+        for (const entity of entities) {
+            const mesh = entity.getComponent(MeshComponent);
+            if (!mesh)
+                continue;
+            camera.update(entity.transform);
+            mesh.updateMVP(this.device, camera.mvpData);
+            mesh.draw(pass);
+        }
         pass.end();
-        const commandBuffer = encoder.finish();
-        this.device.queue.submit([commandBuffer]);
+        this.device.queue.submit([encoder.finish()]);
     }
 }
