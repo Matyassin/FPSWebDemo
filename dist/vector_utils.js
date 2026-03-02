@@ -37,6 +37,3 @@ export class Vector4 {
         return [this.x, this.y, this.z, this.w];
     }
 }
-export function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-}

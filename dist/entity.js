@@ -1,7 +1,5 @@
-import { Transform } from "./transform.js";
-export class Component {
-    entity;
-}
+import { ScriptComponent } from "./components/script.js";
+import { TransformComponent } from "./components/transform.js";
 export class Entity {
     id;
     transform;
@@ -9,7 +7,21 @@ export class Entity {
     static nextId = 0;
     constructor() {
         this.id = Entity.nextId++;
-        this.transform = new Transform();
+        this.transform = new TransformComponent();
+    }
+    callScriptsStart() {
+        for (const component of this.components) {
+            if (component instanceof ScriptComponent) {
+                component.start?.();
+            }
+        }
+    }
+    callScriptsUpdate() {
+        for (const component of this.components) {
+            if (component instanceof ScriptComponent) {
+                component.update?.();
+            }
+        }
     }
     addComponent(component) {
         component.entity = this;

@@ -1,4 +1,4 @@
-import { MeshComponent } from "./mesh.js";
+import { MeshComponent } from "./components/mesh.js";
 import { Texture } from "./texture.js";
 export class Renderer {
     device;

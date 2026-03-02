@@ -1,12 +1,17 @@
 import { Renderer } from "./renderer.js";
+import { Input } from "./input.js";
 import { Time } from "./time.js";
-import { Entity } from "./entity.js";
-import { Camera } from "./camera.js";
+import { Vector3 } from "./utils.js";
 import { Shader } from "./shader.js";
 import { Texture } from "./texture.js";
 import { Material } from "./material.js";
-import { MeshComponent } from "./mesh.js";
 import { ObjLoader } from "./obj_loader.js";
+import { Scene } from "./scene.js";
+import { Entity } from "./entity.js";
+import { CameraComponet } from "./components/camera.js";
+import { MeshComponent } from "./components/mesh.js";
+import { FPSController } from "./scripts/fps_controller.js";
+import { RotatingCube } from "./scripts/rotating_cube.js";
 async function main() {
     //-----SETUP-----
     const canvas = document.querySelector('canvas');
@@ -35,27 +40,35 @@ async function main() {
     }
     const textureFormat = navigator.gpu.getPreferredCanvasFormat();
     const fpsDisplay = document.getElementById('fps');
-    //----"ASSET LOADING"----- (something better for global assets in the future like shaders, textures, materials, meshes...)
+    //----- RENDERER ----- (maybe it stays here maybe scenes should have their own renderes)
+    const renderer = new Renderer(device, canvas, context, textureFormat);
+    //---- ASSET LOADING ----- (something better for global assets in the future like shaders, textures, materials, meshes...)
     const [opaqueShader, cubeAlbedo] = await Promise.all([
         Shader.load(device, '../../assets/shaders/opaque.wgsl'),
         Texture.load(device, '../../assets/models/cube/textures/albedo.png'),
     ]);
-    const material = new Material(device, opaqueShader, cubeAlbedo, textureFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true });
-    //----"SCENE"-----
-    const renderer = new Renderer(device, canvas, context, textureFormat);
-    const camera = new Camera(canvas);
-    const rotatingCube = new Entity();
     const [cubeVerts, cubeIdxs] = await ObjLoader.load('../../assets/models/cube/source/cube.obj');
+    const material = new Material(device, opaqueShader, cubeAlbedo, textureFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true });
+    //----- SCENE ------
+    const testScene = new Scene();
+    const mainCamera = testScene.add(new Entity());
+    const rotatingCube = testScene.add(new Entity());
+    mainCamera.transform.position = new Vector3(0, 1.5, 0);
+    rotatingCube.transform.position = new Vector3(0, 0, 3);
     rotatingCube.addComponent(new MeshComponent(device, material, cubeVerts, cubeIdxs));
-    camera.lookAt([0, 1.5, 3], [0, 0, 0], [0, 1, 0]); // pos[x=0, y=1.5up, z=3back], target[looking at pos[0,0,0]], up[no tilt]
-    function renderLoop(timestamp) {
+    rotatingCube.addComponent(new RotatingCube());
+    mainCamera.addComponent(new CameraComponet(canvas, Math.PI / 3, 0.1, 100));
+    mainCamera.addComponent(new FPSController());
+    Input.init();
+    testScene.start();
+    function gameLoop(timestamp) {
         Time.update(timestamp);
         fpsDisplay.textContent = `FPS: ${Math.round(1 / Time.deltaTime)}`;
-        rotatingCube.transform.rotation.x = Time.time * 0.3;
-        rotatingCube.transform.rotation.y = Time.time * 0.8;
-        renderer.drawFrame(camera, [rotatingCube]);
-        requestAnimationFrame(renderLoop);
+        testScene.update();
+        renderer.drawFrame(mainCamera.getComponent(CameraComponet), testScene.getEntites());
+        Input.endFrame();
+        requestAnimationFrame(gameLoop);
     }
-    requestAnimationFrame(renderLoop);
+    requestAnimationFrame(gameLoop);
 }
 main();

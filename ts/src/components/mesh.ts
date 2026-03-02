@@ -1,5 +1,5 @@
-import { Component } from "./entity.js";
-import { Material } from "./material.js";
+import { Component } from "../component.js";
+import { Material } from "../material.js";
 
 export class MeshComponent extends Component {
     public readonly material: Material;
@@ -11,7 +11,6 @@ export class MeshComponent extends Component {
 
     public constructor(device: GPUDevice, mat: Material , verts: Float32Array<ArrayBuffer>, idxs: Uint16Array<ArrayBuffer>) {
         super();
-
         this.material = mat;
         this.indexCount = idxs.length;
         this.vertexBuffer = device.createBuffer({
