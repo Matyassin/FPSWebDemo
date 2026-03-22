@@ -1,7 +1,6 @@
 import { Renderer } from "./renderer.js";
 import { Input } from "./input.js";
 import { Time } from "./time.js";
-import { Vector3 } from "./utils.js";
 import { Shader } from "./shader.js";
 import { Texture } from "./texture.js";
 import { Material } from "./material.js";
@@ -11,6 +10,7 @@ import { Entity } from "./entity.js";
 import { CameraComponet } from "./components/camera.js";
 import { MeshComponent } from "./components/mesh.js";
 import { FPSController } from "./scripts/fps_controller.js";
+import { Skybox } from "./scripts/skybox.js";
 
 async function main(): Promise<void> {
     //-----SETUP-----
@@ -66,16 +66,16 @@ async function main(): Promise<void> {
     const mainCamera = testScene.add(new Entity());
     const groundPlane = testScene.add(new Entity());
     const skybox = testScene.add(new Entity());
-    
-    mainCamera.transform.position = new Vector3(0, 1.5, 0);
 
-    skybox.addComponent(new MeshComponent(device, skyboxMaterial, skyboxVerts, skyboxIdxs));
-    groundPlane.addComponent(new MeshComponent(device, groundMaterial, groundVerts, groundIdxs));
     mainCamera.addComponent(new CameraComponet(canvas, Math.PI / 3, 0.1, 1000));
     mainCamera.addComponent(new FPSController());
+    skybox.addComponent(new MeshComponent(device, skyboxMaterial, skyboxVerts, skyboxIdxs));
+    skybox.addComponent(new Skybox());
+    groundPlane.addComponent(new MeshComponent(device, groundMaterial, groundVerts, groundIdxs));
     
     Input.init();
 
+    testScene.awake();
     testScene.start();
 
     function gameLoop(timestamp: number): void {
@@ -84,7 +84,7 @@ async function main(): Promise<void> {
 
         testScene.update();
 
-        renderer.drawFrame(mainCamera.getComponent(CameraComponet)!, testScene.getEntites());
+        renderer.drawFrame(mainCamera.getComponent(CameraComponet)!, testScene.entites);
         Input.endFrame();
 
         requestAnimationFrame(gameLoop);

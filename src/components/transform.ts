@@ -8,7 +8,7 @@ export class TransformComponent extends Component {
     public rotation: Vector3; // euler angles (maybe Quaternion later)
     public scale: Vector3;
 
-    public constructor(pos: Vector3 = new Vector3(0,0,0), rot: Vector3 = new Vector3(0,0,0), scale: Vector3 = new Vector3(1,1,1)) {
+    public constructor(pos: Vector3 = Vector3.zero, rot: Vector3 = Vector3.zero, scale: Vector3 = Vector3.one) {
         super();
         
         this.position = pos;

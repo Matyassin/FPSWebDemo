@@ -5,12 +5,14 @@ export enum KeyCode {
     A         = "KeyA",
     S         = "KeyS",
     D         = "KeyD",
-    LeftShift = "ShiftLeft"
+    Space     = "Space",
+    LeftShift = "ShiftLeft",
+    LeftCtr   = "ControlLeft",
 }
 
 export class Input {
     private static keys = new Set<string>();
-    private static _mouseDelta: Vector2 = new Vector2(0, 0);
+    private static _mouseDelta: Vector2 = Vector2.zero;
 
     public static get mouseDelta() { return this._mouseDelta; }
     

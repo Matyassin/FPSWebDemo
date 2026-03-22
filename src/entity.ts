@@ -14,25 +14,31 @@ export class Entity {
         this.transform = new TransformComponent();
     }
 
+    public callScriptsAwake(): void {
+        for (const component of this.components) {
+            if (component instanceof ScriptComponent)
+                component.awake?.();
+        }
+    }
+
     public callScriptsStart(): void {
         for (const component of this.components) {
-            if (component instanceof ScriptComponent) {
+            if (component instanceof ScriptComponent)
                 component.start?.();
-            }
         }
     }
 
     public callScriptsUpdate(): void {
         for (const component of this.components) {
-            if (component instanceof ScriptComponent) {
+            if (component instanceof ScriptComponent)
                 component.update?.();
-            }
         }
     }
 
     public addComponent<T extends Component>(component: T): T {
         component.entity = this;
         this.components.push(component);
+        
         return component;
     }
 

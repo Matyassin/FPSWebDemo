@@ -1,29 +1,33 @@
 import { Entity } from "./entity.js";
 
 export class Scene {
-    private entities: Entity[] = [];
+    private _entities: Entity[] = [];
 
-    public getEntites(): Entity[] {
-        return this.entities;
-    }
+    public get entites(): Entity[] { return this._entities; }
 
     public add(entity: Entity): Entity {
-        this.entities.push(entity);
+        this._entities.push(entity);
         return entity;
     }
 
     public remove(entity: Entity): void {
-        this.entities = this.entities.filter(e => e.id !== entity.id);
+        this._entities = this._entities.filter(e => e.id !== entity.id);
+    }
+
+    public awake(): void {
+        for (const entity of this._entities) {
+            entity.callScriptsAwake();
+        }
     }
 
     public start(): void {
-        for (const entity of this.entities) {
+        for (const entity of this._entities) {
             entity.callScriptsStart();
         }
     }
 
     public update(): void {
-        for (const entity of this.entities) {
+        for (const entity of this._entities) {
             entity.callScriptsUpdate();
         }
     }
