@@ -1,3 +1,5 @@
+import { Entity } from "./entity";
+
 export abstract class Component {
-    entity!: any;
+    entity!: Entity;
 }

@@ -1,15 +1,16 @@
 // @ts-ignore
 import { mat4 } from "https://cdn.jsdelivr.net/npm/gl-matrix@3.4.3/esm/index.js";
+import { Mathf } from "../utils.js";
 import { Component } from "../component.js";
 import { TransformComponent } from "./transform.js";
 
-export class CameraComponet extends Component {
+export class CameraComponent extends Component {
     public mvpData = new Float32Array(16) as Float32Array<ArrayBuffer>;
     private projection = mat4.create();
     private view = mat4.create();
     private mvp = mat4.create();
 
-    public fov: number = Math.PI / 4;   // 45°
+    public fov: number = Mathf.degToRad(45);
     public nearClipPlane: number = 0.1;
     public farClipPlane: number = 100;
 
@@ -17,7 +18,11 @@ export class CameraComponet extends Component {
 
     public constructor(canvas: HTMLCanvasElement, fov: number, near: number, far: number) {
         super();
+
         this.canvas = canvas;
+        this.fov = fov;
+        this.nearClipPlane = near;
+        this.farClipPlane = far;
     }
 
     public lookAt(eye: [number, number, number], target: [number, number, number], up: [number, number, number]): void {
@@ -25,10 +30,10 @@ export class CameraComponet extends Component {
     }
 
     public update(modelTransform: TransformComponent): void {
-        const transform = this.entity.transform;
+        const transform: TransformComponent = this.entity.transform;
 
-        const yaw = transform.rotation.y;
-        const pitch = transform.rotation.x;
+        const yaw: number = transform.rotation.y;
+        const pitch: number = transform.rotation.x;
 
         const forward = [
             Math.cos(pitch) * Math.sin(yaw),

@@ -115,6 +115,39 @@ export class Vector4 {
     }
 }
 
+export class Color {
+    public r: number;
+    public g: number;
+    public b: number;
+    public a: number;
+
+    public constructor(r: number = 1, g: number = 1, b: number = 1, a: number = 1) {
+        this.r = r;
+        this.g = g;
+        this.b = b;
+        this.a = a;
+    }
+
+    public static readonly white   = new Color(1, 1, 1, 1);
+    public static readonly black   = new Color(0, 0, 0, 1);
+    public static readonly red     = new Color(1, 0, 0, 1);
+    public static readonly green   = new Color(0, 1, 0, 1);
+    public static readonly blue    = new Color(0, 0, 1, 1);
+    public static readonly yellow  = new Color(1, 1, 0, 1);
+
+    public static fromHex(hex: string): Color {
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+        return new Color(r, g, b, 1);
+    }
+
+    public toArray(): [number, number, number, number] {
+        return [this.r, this.g, this.b, this.a];
+    }
+}
+
 export class Mathf {
     public static clamp(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(max, value));
@@ -122,5 +155,13 @@ export class Mathf {
 
     public static lerp(a: number, b: number, t: number) {
         return a + (b - a) * t;
+    }
+
+    public static degToRad(deg: number): number {
+        return deg * (Math.PI / 180);
+    }
+
+    public static radToDeg(rad: number): number {
+        return rad * (180 / Math.PI);
     }
 }

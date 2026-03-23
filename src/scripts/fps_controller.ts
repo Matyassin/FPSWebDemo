@@ -1,16 +1,23 @@
-import { ScriptComponent } from "../components/script.js";
-import { Input, KeyCode } from "../input.js";
-import { Physics } from "../physics.js";
-import { Time } from "../time.js";
 import { Mathf, Vector3 } from "../utils.js";
+import { Time } from "../time.js";
+import { Physics } from "../physics.js";
+import { Input, KeyCode } from "../input.js";
+import { ScriptComponent } from "../components/script.js";
+import { TransformComponent } from "../components/transform.js";
 
 export class FPSController extends ScriptComponent {
+    // FUNCTIONAL OPTIONS
+    public canMove: boolean = true;
+    public canLook: boolean = true;
+    public canSprint: boolean = true;
+    public canCrouch: boolean = true;
+
     // --- CONTROLLER PROPERITES ---
     private readonly height: number = 2;
 
     // ----- LOOK -----
     private lookSensitivity: number = 0.001;
-    private maxPitch: number = 85;
+    private readonly maxPitch: number = 85;
 
     // ----- MOVEMENT -----
     private walkSpeed: number = 5;
@@ -19,8 +26,8 @@ export class FPSController extends ScriptComponent {
     private currentVelocity: Vector3 = Vector3.zero;
 
     // ----- CROUCH -----
-    private timeToCrouch: number = 6;
-    private crouchHeightOffset: number = 0;
+    private readonly timeToCrouch: number = 6;
+    private crouchHeightOffset!: number;
     private isCrouched: boolean = false;
     private isCrouching: boolean = false;
 
@@ -30,16 +37,16 @@ export class FPSController extends ScriptComponent {
     private mass: number = 2;
     private isGrounded: boolean = false;
 
+    private transform!: TransformComponent;
     public static instance: FPSController;
 
 
     public override awake(): void {
         FPSController.instance = this;
-    }
+        this.transform = this.entity.transform;
 
-    public override start(): void {
         this.entity.transform.position = new Vector3(0, this.height * 0.75, 0);
-        this.crouchHeightOffset = this.height;
+        this.crouchHeightOffset = this.height * 0.75;
     }
     
     public override update(): void {
@@ -59,23 +66,23 @@ export class FPSController extends ScriptComponent {
                 moveSpeed *= this.sprintSpeedMultiplier;
             }
 
-            targetVelocity.x += this.entity.transform.forward.x;
-            targetVelocity.z += this.entity.transform.forward.z;
+            targetVelocity.x += this.transform.forward.x;
+            targetVelocity.z += this.transform.forward.z;
         }
 
         if (Input.getKeyDown(KeyCode.S)) {
-            targetVelocity.x -= this.entity.transform.forward.x;
-            targetVelocity.z -= this.entity.transform.forward.z;
+            targetVelocity.x -= this.transform.forward.x;
+            targetVelocity.z -= this.transform.forward.z;
         }
 
         if (Input.getKeyDown(KeyCode.A)) {
-            targetVelocity.x += this.entity.transform.right.x;
-            targetVelocity.z += this.entity.transform.right.z;
+            targetVelocity.x += this.transform.right.x;
+            targetVelocity.z += this.transform.right.z;
         }
 
         if (Input.getKeyDown(KeyCode.D)) {
-            targetVelocity.x -= this.entity.transform.right.x;
-            targetVelocity.z -= this.entity.transform.right.z;
+            targetVelocity.x -= this.transform.right.x;
+            targetVelocity.z -= this.transform.right.z;
         }
 
         targetVelocity = targetVelocity.normalized;
@@ -88,35 +95,34 @@ export class FPSController extends ScriptComponent {
             this.acceleration * Time.deltaTime
         );
 
-        this.entity.transform.position.x += this.currentVelocity.x * Time.deltaTime;
-        this.entity.transform.position.z += this.currentVelocity.z * Time.deltaTime;
+        this.transform.position.x += this.currentVelocity.x * Time.deltaTime;
+        this.transform.position.z += this.currentVelocity.z * Time.deltaTime;
     }
 
     private handleLook(): void {
         const maxPitch: number = this.maxPitch * (Math.PI / 180);
 
-        this.entity.transform.rotation.y -= Input.mouseDelta.x * this.lookSensitivity;
-        this.entity.transform.rotation.x -= Input.mouseDelta.y * this.lookSensitivity;
-        this.entity.transform.rotation.x = Mathf.clamp(this.entity.transform.rotation.x, -maxPitch, maxPitch);
+        this.transform.rotation.y -= Input.mouseDelta.x * this.lookSensitivity;
+        this.transform.rotation.x -= Input.mouseDelta.y * this.lookSensitivity;
+        this.transform.rotation.x = Mathf.clamp(this.transform.rotation.x, -maxPitch, maxPitch);
     }
 
     private handleCrouch(): void {
-        this.isCrouching = Math.abs(this.entity.transform.position.y - this.crouchHeightOffset) > 0.01;
+        this.isCrouching = Math.abs(this.transform.position.y - this.crouchHeightOffset) > 0.01;
 
         if (Input.getKeyDown(KeyCode.LeftCtr) && !this.isCrouching) {
             this.isCrouched = !this.isCrouched;
             this.crouchHeightOffset = this.isCrouched ? this.height / 2 : this.height;
         }
 
-        this.entity.transform.position.y = Mathf.lerp(
-            this.entity.transform.position.y,
+        this.transform.position.y = Mathf.lerp(
+            this.transform.position.y,
             this.crouchHeightOffset,
             Time.deltaTime * this.timeToCrouch
         );
     }
 
     private handleJump(): void {
-        // Very early hacky method only works on planes :)
-        
+        // maybe we don't let the player jump ?
     }
 }

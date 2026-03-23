@@ -11,27 +11,27 @@ export class MeshComponent extends Component {
 
     public constructor(device: GPUDevice, mat: Material , verts: Float32Array<ArrayBuffer>, idxs: Uint16Array<ArrayBuffer>) {
         super();
+
         this.material = mat;
         this.indexCount = idxs.length;
+
         this.vertexBuffer = device.createBuffer({
             size: verts.byteLength,
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
-
-        device.queue.writeBuffer(this.vertexBuffer, 0, verts);
 
         this.indexBuffer = device.createBuffer({
             size: idxs.byteLength,
             usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
         });
 
-        device.queue.writeBuffer(this.indexBuffer, 0, idxs);
-
         this.uniformBuffer = device.createBuffer({
             size: 64, // mat4x4
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
+        device.queue.writeBuffer(this.vertexBuffer, 0, verts);
+        device.queue.writeBuffer(this.indexBuffer, 0, idxs);
         this.bindGroup = mat.createBindGroup(device, this.uniformBuffer);
     }
 

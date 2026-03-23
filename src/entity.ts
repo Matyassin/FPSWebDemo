@@ -1,3 +1,4 @@
+import { Vector3 } from "./utils.js";
 import { Component } from "./component.js";
 import { ScriptComponent } from "./components/script.js";
 import { TransformComponent } from "./components/transform.js";
@@ -5,13 +6,13 @@ import { TransformComponent } from "./components/transform.js";
 export class Entity {
     public readonly id: number;
     public transform: TransformComponent;
-    private components: Component[] = new Array(1);
+    private components: Component[] = [];
 
     private static nextId: number = 0;
 
-    public constructor() {
+    public constructor(pos: Vector3 = Vector3.zero, rot: Vector3 = Vector3.zero, scale: Vector3 = Vector3.one) {
         this.id = Entity.nextId++;
-        this.transform = new TransformComponent();
+        this.transform = new TransformComponent(pos, rot, scale);
     }
 
     public callScriptsAwake(): void {

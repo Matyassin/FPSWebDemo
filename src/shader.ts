@@ -10,7 +10,8 @@ export class Shader {
     }
 
     public static async load(device: GPUDevice, path: string): Promise<Shader> {
-        const code = await fetch(path).then(r => r.text());
+        const code: string = await fetch(path).then(r => r.text());
+
         const module = device.createShaderModule({
             label: path,
             code: code

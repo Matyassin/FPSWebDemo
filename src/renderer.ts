@@ -1,7 +1,7 @@
 import { Entity } from "./entity.js";
-import { CameraComponet } from "./components/camera.js";
-import { MeshComponent } from "./components/mesh.js";
 import { Texture } from "./texture.js";
+import { CameraComponent } from "./components/camera.js";
+import { MeshComponent } from "./components/mesh.js";
 
 export class Renderer {
     private device: GPUDevice;
@@ -27,8 +27,9 @@ export class Renderer {
         this.depthTexture = Texture.createDepthTexture(this.device, this.canvas.width, this.canvas.height);
     }
 
-    public drawFrame(camera: CameraComponet, entities: Entity[]): void {
+    public drawFrame(camera: CameraComponent, entities: Entity[]): void {
         const encoder = this.device.createCommandEncoder();
+        
         const pass = encoder.beginRenderPass({
             colorAttachments: [{
                 view: this.context.getCurrentTexture().createView(),

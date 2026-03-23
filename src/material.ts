@@ -24,11 +24,12 @@ export class Material {
         } : undefined;
 
         const defaultLayout: GPUVertexBufferLayout[] = [{
-            arrayStride: 4 * 8, // x, y, z, u, v, nx, ny, nz
+            arrayStride: 4 * 12, // x, y, z, u, v, nx, ny, nz, tx, ty, tz, tw
             attributes: [
-                { shaderLocation: 0, offset: 0,     format: 'float32x3' },
-                { shaderLocation: 1, offset: 3 * 4, format: 'float32x2' },
-                { shaderLocation: 2, offset: 5 * 4, format: 'float32x3' },
+                { shaderLocation: 0, offset: 0,     format: 'float32x3' }, // pos
+                { shaderLocation: 1, offset: 3 * 4, format: 'float32x2' }, // uv
+                { shaderLocation: 2, offset: 5 * 4, format: 'float32x3' }, // normal
+                { shaderLocation: 3, offset: 8 * 4, format: 'float32x4' }, // tangent
             ],
         }];
 

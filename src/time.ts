@@ -7,7 +7,8 @@ export class Time {
     public static get deltaTime(): number { return this._deltaTime; }
 
     public static update(timeStamp: number): void {
-        const t = timeStamp / 1000 // ms to s
+        const t: number = timeStamp / 1000 // ms to s
+        
         this._deltaTime = t - this.lastTimeStamp;
         this._time = t;
         this.lastTimeStamp = t;
