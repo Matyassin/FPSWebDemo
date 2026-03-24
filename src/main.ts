@@ -2,6 +2,8 @@ import { Renderer } from "./renderer.js";
 import { Input } from "./input.js";
 import { Time } from "./time.js";
 import { TestScene } from "./scene.js";
+import { Lighting } from "./lighting.js";
+import { Color } from "./utils.js";
 
 async function main(): Promise<void> {
     //-----SETUP-----
@@ -38,7 +40,7 @@ async function main(): Promise<void> {
     const fpsDisplay = document.getElementById('fps');
 
     const renderer = new Renderer(device, canvas, context, textureFormat);
-    const testScene = new TestScene();
+    const testScene = new TestScene(new Lighting(device, Color.fromHex('#87CEEB'), 0.05));
 
     await testScene.load(device, canvas, textureFormat);
 
@@ -51,8 +53,8 @@ async function main(): Promise<void> {
         fpsDisplay!.textContent = `FPS: ${Math.round(1 / Time.deltaTime)}`;
 
         testScene.update();
-        renderer.drawFrame(testScene.mainCamera!, testScene.entites);
-        
+        renderer.drawFrame(testScene.mainCamera!, testScene.entites, testScene.lighting);
+
         Input.endFrame();
         Time.update(timestamp);
 
