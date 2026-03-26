@@ -8,6 +8,7 @@ export interface MaterialOptions {
     vertexLayout?: GPUVertexBufferLayout[]
 }
 
+
 export class Material {
     public readonly pipeline: GPURenderPipeline;
     public readonly shader: Shader;
@@ -59,15 +60,11 @@ export class Material {
         this.bindGroupLayout = this.pipeline.getBindGroupLayout(0);
     }
 
-    // bind group is per-mesh since each mesh has its own uniform buffer
-    // use createBindGroup() after constructing the material
     public createBindGroup(device: GPUDevice, uniformBuffer: GPUBuffer): GPUBindGroup {
         const entries: GPUBindGroupEntry[] = [
             { binding: 0, resource: this.textures[0].sampler },
-            ...this.textures.map((t, i) => ({
-                binding: i + 1,
-                resource: t.gpuTexture.createView(),
-            })),
+            { binding: 1, resource: this.textures[0].gpuTexture.createView() },
+            // we need more textures for only for lit materials
             { binding: this.textures.length + 1, resource: { buffer: uniformBuffer,  } },
         ];
 

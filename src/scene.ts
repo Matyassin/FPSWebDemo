@@ -56,11 +56,18 @@ export abstract class Scene {
 export class TestScene extends Scene {
     public override async load(device: GPUDevice, canvas: HTMLCanvasElement, texFormat: GPUTextureFormat): Promise<void> {        
         // ASSETS ?? - this needs more work (an asset should load all it's things before rendering)
-        // Textures
-        const [opaqueShader, groundAlbedo, skyboxAlbedo] = await Promise.all([
+        // Textures and Shaders
+        const [opaqueShader, skyboxAlbedo] = await Promise.all([
             Shader.load(device, '../../assets/shaders/opaque.wgsl'),
-            Texture.load(device, '../../assets/models/ground/textures/albedo.png'),
             Texture.load(device, '../../assets/models/skybox/textures/stars.png'),
+        ]);
+
+        const [groundAlbedo, groundNormal, groundMetallic, groundRoughness, groundAo] = await Promise.all([
+            Texture.load(device, '../../assets/models/ground/textures/albedo.png'),
+            Texture.load(device, '../../assets/models/ground/textures/normal.png'),
+            Texture.load(device, '../../assets/models/ground/textures/metallic.png'),
+            Texture.load(device, '../../assets/models/ground/textures/roughness.png'),
+            Texture.load(device, '../../assets/models/ground/textures/ao.png'),
         ]);
 
         const [bucketAlbedo, bucketNormal, bucketMetallic, bucketRoughness, bucketAo] = await Promise.all([
@@ -73,13 +80,13 @@ export class TestScene extends Scene {
 
         // Meshes
         const [groundVerts, groundIdxs] = await ObjLoader.load('../../assets/models/ground/source/plane.obj');
-        const [skyboxVerts, skyboxIdxs] = await ObjLoader.load('../../assets/models/skybox/source/skybox.obj');
+        const [skyboxVerts, skyboxIdxs] = await ObjLoader.load('../../assets/models/skybox/source/skybox_sphere.obj');
         const [bucketVerts, bucketIdxs] = await ObjLoader.load('../../assets/models/bucket/source/bucket.obj');
 
         // Materials
         const groundMaterial = new Material(device, opaqueShader, [groundAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true });
         const skyboxMaterial = new Material(device, opaqueShader, [skyboxAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: false });
-        //const bucketMaterial = new Material(device);
+        const bucketMaterial = new Material(device, opaqueShader, [bucketAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true });
 
         // HIERARCHY ??
         const mainCamera = super.add(new Entity());
@@ -94,6 +101,6 @@ export class TestScene extends Scene {
         skybox.addComponent(new Skybox());
         groundPlane.addComponent(new MeshComponent(device, groundMaterial, groundVerts, groundIdxs));
         light.addComponent(new LightComponent());
-        //bucket.addComponent(new MeshComponent(device, material, bucketVerts, bucketIdxs));
+        bucket.addComponent(new MeshComponent(device, bucketMaterial, bucketVerts, bucketIdxs));
     }
 }

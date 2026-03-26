@@ -24,5 +24,9 @@ fn vert(in: VertexIn) -> VertexOut {
 
 @fragment
 fn frag(in: VertexOut) -> @location(0) vec4f {
-    return textureSample(albedo, textureSampler, in.uv);
+    return textureSample(
+        albedo,
+        textureSampler,
+        vec2f(in.uv.x, 1- in.uv.y) // flipping uv on y seems to work
+    );
 }
