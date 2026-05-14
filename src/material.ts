@@ -1,13 +1,12 @@
 import { Shader } from "./shader.js";
 import { Texture } from "./texture.js";
 
-export interface MaterialOptions {
+export type MaterialOptions = {
     blend:        'opaque' | 'transparent';
     cullMode:      GPUCullMode;
     depthWrite:    boolean,
     vertexLayout?: GPUVertexBufferLayout[]
 }
-
 
 export class Material {
     public readonly pipeline: GPURenderPipeline;

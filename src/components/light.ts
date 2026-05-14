@@ -8,12 +8,12 @@ export enum LightType {
 }
 
 export class LightComponent extends Component {
-    public lightType: LightType;
+    public readonly lightType: LightType;
     public intensity: number;
     public range: number;
     public color: Color;
 
-    public constructor(type: LightType = LightType.Point, intensity: number = 1, range: number = 10, color: Color = Color.white) {
+    public constructor(type: LightType, intensity: number = 1, range: number = 10, color: Color = Color.white) {
         super();
 
         this.lightType = type;

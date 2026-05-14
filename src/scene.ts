@@ -6,20 +6,13 @@ import { ObjLoader } from "./obj_loader.js";
 import { Material } from "./material.js";
 import { CameraComponent } from "./components/camera.js";
 import { MeshComponent } from "./components/mesh.js";
-import { LightComponent } from "./components/light.js";
+import { LightComponent, LightType } from "./components/light.js";
 import { FPSController } from "./scripts/fps_controller.js";
 import { Skybox } from "./scripts/skybox.js";
-import { Lighting } from "./lighting.js";
 
 export abstract class Scene {
     public mainCamera: CameraComponent | null = null;
-    public lighting: Lighting;
-    
     private _entities: Entity[] = [];
-
-    public constructor(lighting: Lighting) {
-        this.lighting = lighting;
-    }
 
     public get entites(): Entity[] { return this._entities; }
 
@@ -92,7 +85,7 @@ export class TestScene extends Scene {
         const mainCamera = super.add(new Entity());
         const skybox = super.add(new Entity());
         const groundPlane = super.add(new Entity());
-        const light = super.add(new Entity(new Vector3(0, 1, 0)));
+        const sunLight = super.add(new Entity(new Vector3(0, 1, 0)));
         const bucket = super.add(new Entity(new Vector3(0, 0.2, 0)));
 
         this.mainCamera = mainCamera.addComponent(new CameraComponent(canvas, Mathf.degToRad(60), 0.1, 1000));
@@ -100,7 +93,7 @@ export class TestScene extends Scene {
         skybox.addComponent(new MeshComponent(device, skyboxMaterial, skyboxVerts, skyboxIdxs));
         skybox.addComponent(new Skybox());
         groundPlane.addComponent(new MeshComponent(device, groundMaterial, groundVerts, groundIdxs));
-        light.addComponent(new LightComponent());
+        sunLight.addComponent(new LightComponent(LightType.Directional));
         bucket.addComponent(new MeshComponent(device, bucketMaterial, bucketVerts, bucketIdxs));
     }
 }

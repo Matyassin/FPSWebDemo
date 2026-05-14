@@ -2,8 +2,6 @@ import { Renderer } from "./renderer.js";
 import { Input } from "./input.js";
 import { Time } from "./time.js";
 import { TestScene } from "./scene.js";
-import { Lighting } from "./lighting.js";
-import { Color } from "./utils.js";
 
 async function main(): Promise<void> {
     //-----SETUP-----
@@ -36,11 +34,11 @@ async function main(): Promise<void> {
         return;
     }
 
-    const textureFormat= navigator.gpu.getPreferredCanvasFormat();
+    const textureFormat = navigator.gpu.getPreferredCanvasFormat();
     const fpsDisplay = document.getElementById('fps');
 
     const renderer = new Renderer(device, canvas, context, textureFormat);
-    const testScene = new TestScene(new Lighting(device, Color.fromHex('#87CEEB'), 0.05));
+    const testScene = new TestScene();
 
     await testScene.load(device, canvas, textureFormat);
 
@@ -53,7 +51,7 @@ async function main(): Promise<void> {
         fpsDisplay!.textContent = `FPS: ${Math.round(1 / Time.deltaTime)}`;
 
         testScene.update();
-        renderer.drawFrame(testScene.mainCamera!, testScene.entites, testScene.lighting);
+        renderer.drawFrame(testScene.mainCamera!, testScene.entites);
 
         Input.endFrame();
         Time.update(timestamp);
