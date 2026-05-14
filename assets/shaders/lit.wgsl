@@ -1,44 +1,82 @@
-struct Uniforms {
-    normalMatrix: mat3x3f,
-    worldViewProjection: mat4x4f,
-    color: vec4f,
-    lightDirection: vec3f,
+struct VertexIn {
+    @location(0) position: vec3f,
+    @location(1) uv: vec2f,
+    @location(2) normal: vec3f,
+    @location(3) tangent: vec4f,
 };
 
-struct Vertex {
-    @location(0) position: vec4f,
-    @location(1) normal: vec3f,
-};
-
-struct VSOutput {
+struct VertexOut {
     @builtin(position) position: vec4f,
-    @location(0) normal: vec3f,
+    @location(0)       uv: vec2f,
+    @location(1)       normal: vec3f,
+    @location(2)       worldPos: vec3f,
 };
 
-@group(0) @binding(0) var<uniform> uni: Uniforms;
+struct Light {
+    position: vec3f,
+    kind: u32,
+    color: vec3f,
+    intensity: f32,
+    direction: vec3f,
+    range: f32,
+};
 
-@vertex fn vs(vert: Vertex) -> VSOutput {
-    var vsOut: VSOutput;
-    vsOut.position = uni.worldViewProjection * vert.position;
+struct LightBuffer {
+    header: vec4f,
+    lights: array<Light, 10>,
+};
 
-    // Orient the normals and pass to the fragment shader
-    vsOut.normal = uni.normalMatrix * vert.normal;
+@group(0) @binding(0) var textureSampler: sampler;
+@group(0) @binding(1) var albedo: texture_2d<f32>;
+@group(0) @binding(2) var<uniform> mvp: mat4x4f;
 
-    return vsOut;
+@group(1) @binding(0) var<uniform> lightBuffer: LightBuffer;
+
+@vertex
+fn vert(in: VertexIn) -> VertexOut {
+    var out: VertexOut;
+    out.position = mvp * vec4f(in.position, 1.0);
+    out.uv = in.uv;
+    out.normal = in.normal;
+    out.worldPos = in.position;
+    
+    return out;
 }
 
-@fragment fn fs(vsOut: VSOutput) -> @location(0) vec4f {
-    // Because vsOut.normal is an inter-stage variable 
-    // it's interpolated so it will not be a unit vector.
-    // Normalizing it will make it a unit vector again
-    let normal = normalize(vsOut.normal);
+@fragment
+fn frag(in: VertexOut) -> @location(0) vec4f {
+    let baseColor = textureSample(
+        albedo,
+        textureSampler,
+        vec2f(in.uv.x, 1.0 - in.uv.y)
+    );
 
-    // Compute the light by taking the dot product
-    // of the normal to the light's reverse direction
-    let light = dot(normal, -uni.lightDirection);
+    let N = normalize(in.normal);
+    var totalLighting = vec3f(0.0);
+    let lightCount = u32(lightBuffer.header.x);
 
-    // Lets multiply just the color portion (not the alpha)
-    // by the light
-    let color = uni.color.rgb * light;
-    return vec4f(color, uni.color.a);
+    for (var i = 0u; i < lightCount; i = i + 1u) {
+        let light = lightBuffer.lights[i];
+
+        // Point
+        if (light.kind == 0) {
+            // later
+        }
+        // Spot
+        else if (light.kind == 1) {
+            // later
+        }
+        // Directional
+        else if (light.kind == 2) {
+            let L = normalize(-light.direction);
+            let diffuseStrength = max(dot(N, L), 0.0);
+            let diffuse = diffuseStrength * light.color * light.intensity;
+            totalLighting += diffuse;
+        } 
+    }
+
+    let ambient = vec3f(0.15, 0.15, 0.15);
+    let finalColor = baseColor.rgb * (ambient + totalLighting);
+
+    return vec4f(finalColor, baseColor.a);
 }

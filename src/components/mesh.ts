@@ -39,9 +39,13 @@ export class MeshComponent extends Component {
         device.queue.writeBuffer(this.uniformBuffer, 0, mvpData.buffer);
     }
 
-    public draw(pass: GPURenderPassEncoder): void {
+    public draw(pass: GPURenderPassEncoder, lightingBindGroup?: GPUBindGroup): void {
         pass.setPipeline(this.material.pipeline);
         pass.setBindGroup(0, this.bindGroup);
+
+        if (lightingBindGroup)
+            pass.setBindGroup(1, lightingBindGroup);
+        
         pass.setVertexBuffer(0, this.vertexBuffer);
         pass.setIndexBuffer(this.indexBuffer, 'uint16');
         pass.drawIndexed(this.indexCount);

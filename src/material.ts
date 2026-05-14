@@ -5,6 +5,7 @@ export type MaterialOptions = {
     blend:        'opaque' | 'transparent';
     cullMode:      GPUCullMode;
     depthWrite:    boolean,
+    isLit?:        boolean,
     vertexLayout?: GPUVertexBufferLayout[]
 }
 
@@ -12,11 +13,13 @@ export class Material {
     public readonly pipeline: GPURenderPipeline;
     public readonly shader: Shader;
     public readonly textures: Texture[];
+    public readonly isLit: boolean;
     private bindGroupLayout: GPUBindGroupLayout;
 
     public constructor(device: GPUDevice, shader: Shader, textures: Texture[], textureFormat: GPUTextureFormat, options: MaterialOptions) {
         this.shader = shader;
         this.textures = textures;
+        this.isLit = options.isLit ?? false;
 
         const blendState: GPUBlendState | undefined = options.blend === 'transparent' ? {
             color: { srcFactor: 'src-alpha', dstFactor: 'one-minus-src-alpha', operation: 'add' },
@@ -68,5 +71,17 @@ export class Material {
         ];
 
         return device.createBindGroup({ layout: this.bindGroupLayout, entries });
+    }
+
+    public createLightingBindGroup(device: GPUDevice, lightingBuffer: GPUBuffer): GPUBindGroup | undefined {
+        if (!this.isLit)
+            return undefined;
+
+        return device.createBindGroup({
+            layout: this.pipeline.getBindGroupLayout(1),
+            entries: [
+                { binding: 0, resource: { buffer: lightingBuffer } },
+            ],
+        });
     }
 }

@@ -50,8 +50,9 @@ export class TestScene extends Scene {
     public override async load(device: GPUDevice, canvas: HTMLCanvasElement, texFormat: GPUTextureFormat): Promise<void> {        
         // ASSETS ?? - this needs more work (an asset should load all it's things before rendering)
         // Textures and Shaders
-        const [opaqueShader, skyboxAlbedo] = await Promise.all([
+        const [opaqueShader, litShader, skyboxAlbedo] = await Promise.all([
             Shader.load(device, '../../assets/shaders/opaque.wgsl'),
+            Shader.load(device, '../../assets/shaders/lit.wgsl'),
             Texture.load(device, '../../assets/models/skybox/textures/stars.png'),
         ]);
 
@@ -72,20 +73,20 @@ export class TestScene extends Scene {
         ]);
 
         // Meshes
-        const [groundVerts, groundIdxs] = await ObjLoader.load('../../assets/models/ground/source/plane.obj');
         const [skyboxVerts, skyboxIdxs] = await ObjLoader.load('../../assets/models/skybox/source/skybox_sphere.obj');
+        const [groundVerts, groundIdxs] = await ObjLoader.load('../../assets/models/ground/source/plane.obj');
         const [bucketVerts, bucketIdxs] = await ObjLoader.load('../../assets/models/bucket/source/bucket.obj');
 
         // Materials
-        const groundMaterial = new Material(device, opaqueShader, [groundAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true });
         const skyboxMaterial = new Material(device, opaqueShader, [skyboxAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: false });
-        const bucketMaterial = new Material(device, opaqueShader, [bucketAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true });
+        const groundMaterial = new Material(device, litShader, [groundAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true, isLit: true });
+        const bucketMaterial = new Material(device, litShader, [bucketAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true, isLit: true });
 
         // HIERARCHY ??
         const mainCamera = super.add(new Entity());
         const skybox = super.add(new Entity());
         const groundPlane = super.add(new Entity());
-        const sunLight = super.add(new Entity(new Vector3(0, 1, 0)));
+        const sunLight = super.add(new Entity(new Vector3(100, 10, 0), new Vector3(100, 200, 0)));
         const bucket = super.add(new Entity(new Vector3(0, 0.2, 0)));
 
         this.mainCamera = mainCamera.addComponent(new CameraComponent(canvas, Mathf.degToRad(60), 0.1, 1000));

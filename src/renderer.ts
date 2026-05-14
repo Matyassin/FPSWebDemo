@@ -2,6 +2,8 @@ import { Entity } from "./entity.js";
 import { Texture } from "./texture.js";
 import { CameraComponent } from "./components/camera.js";
 import { MeshComponent } from "./components/mesh.js";
+import { Lighting } from "./lighting.js";
+import { Material } from "./material.js";
 
 export class Renderer {
     private device: GPUDevice;
@@ -9,12 +11,16 @@ export class Renderer {
     private context: GPUCanvasContext;
     private depthTexture!: GPUTexture;
 
+    private lighting: Lighting;
+    private lightingBindGroups = new Map<Material, GPUBindGroup>();
+
     public constructor(device: GPUDevice, canvas: HTMLCanvasElement, ctx: GPUCanvasContext, texFormat: GPUTextureFormat) {
         this.device = device;
         this.context = ctx;
         this.canvas = canvas;
 
         this.context.configure({ device: device, format: texFormat });
+        this.lighting = new Lighting(device);
 
         this.resize();
         new ResizeObserver(() => this.resize()).observe(canvas);
@@ -28,6 +34,8 @@ export class Renderer {
     }
 
     public drawFrame(camera: CameraComponent, entities: Entity[]): void {
+        this.lighting.update(this.device, entities);
+
         const encoder = this.device.createCommandEncoder();
 
         const pass = encoder.beginRenderPass({
@@ -52,7 +60,18 @@ export class Renderer {
 
             camera.update(entity.transform);
             mesh.updateMVP(this.device, camera.mvpData);
-            mesh.draw(pass);
+
+            let lightingBindGroup: GPUBindGroup | undefined;
+            if (mesh.material.isLit) {
+                lightingBindGroup = this.lightingBindGroups.get(mesh.material);
+                if (!lightingBindGroup) {
+                    lightingBindGroup = mesh.material.createLightingBindGroup(this.device, this.lighting.buffer);
+                    if (lightingBindGroup)
+                        this.lightingBindGroups.set(mesh.material, lightingBindGroup);
+                }
+            }
+
+            mesh.draw(pass, lightingBindGroup);
         }
 
         pass.end();

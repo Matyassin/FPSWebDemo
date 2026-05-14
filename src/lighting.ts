@@ -20,8 +20,10 @@ export class Lighting {
     }
 
     public update(device: GPUDevice, entities: Entity[]): void {
+        this.data.fill(0);
+
         // 1. Find all lights in the scene
-        const lightEntities = entities.filter(e => e.getComponent(LightComponent) !== null);
+        const lightEntities = entities.filter(e => e.getComponent(LightComponent) !== undefined);
         const count = Math.min(lightEntities.length, MAX_LIGHTS);
 
         // 2. Pack Header (Light Count) data[1,2,3] are padding
