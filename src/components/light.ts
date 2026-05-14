@@ -12,13 +12,17 @@ export class LightComponent extends Component {
     public intensity: number;
     public range: number;
     public color: Color;
+    public innerSpotAngle: number;
+    public outerSpotAngle: number;
 
-    public constructor(type: LightType, intensity: number = 1, range: number = 10, color: Color = Color.white) {
+    public constructor(type: LightType, intensity: number = 1, range: number = 10, color: Color = Color.white, innerSpotAngle: number = 15, outerSpotAngle: number = 25) {
         super();
 
         this.lightType = type;
         this.intensity = intensity;
         this.range = range;
         this.color = color;
+        this.innerSpotAngle = innerSpotAngle;
+        this.outerSpotAngle = outerSpotAngle;
     }
 }

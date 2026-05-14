@@ -1,9 +1,9 @@
 import { Entity } from "./entity.js";
-import { Mathf, Vector3 } from "./utils.js";
+import { Mathf, Vector2, Vector3 } from "./utils.js";
 import { Shader } from "./shader.js";
 import { Texture } from "./texture.js";
 import { ObjLoader } from "./obj_loader.js";
-import { Material } from "./material.js";
+import { LitMaterial, UnlitMaterial } from "./material.js";
 import { CameraComponent } from "./components/camera.js";
 import { MeshComponent } from "./components/mesh.js";
 import { LightComponent, LightType } from "./components/light.js";
@@ -47,14 +47,17 @@ export abstract class Scene {
 }
 
 export class TestScene extends Scene {
-    public override async load(device: GPUDevice, canvas: HTMLCanvasElement, texFormat: GPUTextureFormat): Promise<void> {        
-        // ASSETS ?? - this needs more work (an asset should load all it's things before rendering)
-        // Textures and Shaders
-        const [opaqueShader, litShader, skyboxAlbedo] = await Promise.all([
-            Shader.load(device, '../../assets/shaders/opaque.wgsl'),
-            Shader.load(device, '../../assets/shaders/lit.wgsl'),
-            Texture.load(device, '../../assets/models/skybox/textures/stars.png'),
+    public override async load(device: GPUDevice, canvas: HTMLCanvasElement, texFormat: GPUTextureFormat): Promise<void> {
+        // ASSETS (maybe assets shouldn't be tied to a given scene?)
+        // Shaders
+        const [opaqueShader, litShader] = await Promise.all([
+            Shader.load(device,  '../../assets/shaders/opaque.wgsl'),
+            Shader.load(device,  '../../assets/shaders/lit.wgsl'),
         ]);
+
+        // Textures
+        const skyboxAlbedo = await
+            Texture.load(device, '../../assets/models/skybox/textures/stars.png');
 
         const [groundAlbedo, groundNormal, groundMetallic, groundRoughness, groundAo] = await Promise.all([
             Texture.load(device, '../../assets/models/ground/textures/albedo.png'),
@@ -78,23 +81,37 @@ export class TestScene extends Scene {
         const [bucketVerts, bucketIdxs] = await ObjLoader.load('../../assets/models/bucket/source/bucket.obj');
 
         // Materials
-        const skyboxMaterial = new Material(device, opaqueShader, [skyboxAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: false });
-        const groundMaterial = new Material(device, litShader, [groundAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true, isLit: true });
-        const bucketMaterial = new Material(device, litShader, [bucketAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: true, isLit: true });
+        const skyboxMaterial = new UnlitMaterial(device, opaqueShader, [skyboxAlbedo], texFormat, { blend: 'opaque', cullMode: 'back', depthWrite: false });
+        const groundMaterial = new LitMaterial(device, litShader, [groundAlbedo, groundNormal], texFormat, { blend: 'opaque', uvTiling: new Vector2(5, 5) });
+        const bucketMaterial = new LitMaterial(device, litShader, [bucketAlbedo, bucketNormal], texFormat);
 
-        // HIERARCHY ??
-        const mainCamera = super.add(new Entity());
-        const skybox = super.add(new Entity());
-        const groundPlane = super.add(new Entity());
-        const sunLight = super.add(new Entity(new Vector3(100, 10, 0), new Vector3(100, 200, 0)));
-        const bucket = super.add(new Entity(new Vector3(0, 0.2, 0)));
 
-        this.mainCamera = mainCamera.addComponent(new CameraComponent(canvas, Mathf.degToRad(60), 0.1, 1000));
-        mainCamera.addComponent(new FPSController());
-        skybox.addComponent(new MeshComponent(device, skyboxMaterial, skyboxVerts, skyboxIdxs));
-        skybox.addComponent(new Skybox());
-        groundPlane.addComponent(new MeshComponent(device, groundMaterial, groundVerts, groundIdxs));
-        sunLight.addComponent(new LightComponent(LightType.Directional));
-        bucket.addComponent(new MeshComponent(device, bucketMaterial, bucketVerts, bucketIdxs));
+
+        // --------- HIERARCHY --------- (this is gross, needs a GUI)
+        this.mainCamera = super.add(new Entity())
+            .withComponent(new FPSController())
+            .addComponent(new CameraComponent(canvas, Mathf.degToRad(60), 0.1, 1000));
+
+        const skybox = super.add(new Entity())
+            .withComponent(new MeshComponent(device, skyboxMaterial, skyboxVerts, skyboxIdxs))
+            .withComponent(new Skybox());
+
+        // ----LIGHTING----
+        const sunLight = super.add(new Entity(new Vector3(100, 10, 0), new Vector3(100, 200, 0)))
+            .withComponent(new LightComponent(LightType.Directional));
+
+        const pointLight = super.add(new Entity(new Vector3(0, 2, 0)))
+            .withComponent(new LightComponent(LightType.Point, 2, 10));
+
+        // ---ENVIRONMENT---
+        // Props
+        const bucket = super.add(new Entity(new Vector3(0, 0.2, 0)))
+            .withComponent(new MeshComponent(device, bucketMaterial, bucketVerts, bucketIdxs));
+
+        // Ground
+        const groundPlane = super.add(new Entity())
+            .withComponent(new MeshComponent(device, groundMaterial, groundVerts, groundIdxs));
+
+        
     }
 }

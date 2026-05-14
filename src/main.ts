@@ -16,8 +16,8 @@ async function main(): Promise<void> {
         return;
     }
 
-    const context = canvas.getContext('webgpu');
-    if (!context) {
+    const gpuContext = canvas.getContext('webgpu');
+    if (!gpuContext) {
         alert("Failed to get WebGPU context.");
         return;
     }
@@ -37,7 +37,7 @@ async function main(): Promise<void> {
     const textureFormat = navigator.gpu.getPreferredCanvasFormat();
     const fpsDisplay = document.getElementById('fps');
 
-    const renderer = new Renderer(device, canvas, context, textureFormat);
+    const renderer = new Renderer(device, canvas, gpuContext, textureFormat);
     const testScene = new TestScene();
 
     await testScene.load(device, canvas, textureFormat);

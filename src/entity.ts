@@ -43,6 +43,11 @@ export class Entity {
         return component;
     }
 
+    public withComponent<T extends Component>(component: T): this {
+        this.addComponent(component);
+        return this;
+    }
+
     public getComponent<T extends Component>(type: new (...args: any[]) => T): T | undefined {
         return this.components.find(c => c instanceof type) as T | undefined;
     }

@@ -2,14 +2,14 @@ import { LightComponent } from "./components/light";
 import { Entity } from "./entity";
 
 const MAX_LIGHTS: number = 10;
-const FLOATS_PER_LIGHT: number = 12;
+const FLOATS_PER_LIGHT: number = 16;
 
 export class Lighting {
     public buffer: GPUBuffer;
     private data: Float32Array;
 
     public constructor(device: GPUDevice) {
-        // 1 float for lightCount + 3 floats padding + (lights * 12 floats)
+        // 1 float for lightCount + 3 floats padding + (lights * 16 floats)
         const size = (4 + MAX_LIGHTS * FLOATS_PER_LIGHT) * 4;
         this.buffer = device.createBuffer({
             size: size,
@@ -53,6 +53,12 @@ export class Lighting {
             this.data[offset + 9] = dir.y;
             this.data[offset + 10] = dir.z;
             this.data[offset + 11] = light.range;
+
+            // Group 4: Spot inner/outer cutoffs as cosines + padding
+            this.data[offset + 12] = Math.cos(light.innerSpotAngle * (Math.PI / 180));
+            this.data[offset + 13] = Math.cos(light.outerSpotAngle * (Math.PI / 180));
+            this.data[offset + 14] = 0;
+            this.data[offset + 15] = 0;
         }
 
         device.queue.writeBuffer(this.buffer, 0, this.data);

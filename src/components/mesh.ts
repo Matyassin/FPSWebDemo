@@ -7,6 +7,7 @@ export class MeshComponent extends Component {
     private vertexBuffer: GPUBuffer;
     private indexBuffer: GPUBuffer;
     private uniformBuffer: GPUBuffer;
+    private uniformData = new Float32Array(36);
     private indexCount: number;
 
     public constructor(device: GPUDevice, mat: Material , verts: Float32Array<ArrayBuffer>, idxs: Uint16Array<ArrayBuffer>) {
@@ -26,7 +27,7 @@ export class MeshComponent extends Component {
         });
 
         this.uniformBuffer = device.createBuffer({
-            size: 64, // mat4x4
+            size: 144, // mvp + model + uv tiling + padding
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -35,8 +36,14 @@ export class MeshComponent extends Component {
         this.bindGroup = mat.createBindGroup(device, this.uniformBuffer);
     }
 
-    public updateMVP(device: GPUDevice, mvpData: Float32Array<ArrayBuffer>): void {
-        device.queue.writeBuffer(this.uniformBuffer, 0, mvpData.buffer);
+    public updatePerObject(device: GPUDevice, mvpData: Float32Array<ArrayBuffer>, modelData: Float32Array<ArrayBuffer>): void {
+        this.uniformData.set(mvpData, 0);
+        this.uniformData.set(modelData, 16);
+        this.uniformData[32] = this.material.uvTiling.x;
+        this.uniformData[33] = this.material.uvTiling.y;
+        this.uniformData[34] = 0;
+        this.uniformData[35] = 0;
+        device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData);
     }
 
     public draw(pass: GPURenderPassEncoder, lightingBindGroup?: GPUBindGroup): void {

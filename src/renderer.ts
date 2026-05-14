@@ -12,6 +12,8 @@ export class Renderer {
     private depthTexture!: GPUTexture;
 
     private lighting: Lighting;
+    private cameraBuffer: GPUBuffer;
+    private cameraData = new Float32Array(4);
     private lightingBindGroups = new Map<Material, GPUBindGroup>();
 
     public constructor(device: GPUDevice, canvas: HTMLCanvasElement, ctx: GPUCanvasContext, texFormat: GPUTextureFormat) {
@@ -21,6 +23,10 @@ export class Renderer {
 
         this.context.configure({ device: device, format: texFormat });
         this.lighting = new Lighting(device);
+        this.cameraBuffer = device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+        });
 
         this.resize();
         new ResizeObserver(() => this.resize()).observe(canvas);
@@ -35,6 +41,12 @@ export class Renderer {
 
     public drawFrame(camera: CameraComponent, entities: Entity[]): void {
         this.lighting.update(this.device, entities);
+        const cameraPosition = camera.entity.transform.position;
+        this.cameraData[0] = cameraPosition.x;
+        this.cameraData[1] = cameraPosition.y;
+        this.cameraData[2] = cameraPosition.z;
+        this.cameraData[3] = 0.0;
+        this.device.queue.writeBuffer(this.cameraBuffer, 0, this.cameraData);
 
         const encoder = this.device.createCommandEncoder();
 
@@ -59,13 +71,13 @@ export class Renderer {
                 continue;
 
             camera.update(entity.transform);
-            mesh.updateMVP(this.device, camera.mvpData);
+            mesh.updatePerObject(this.device, camera.mvpData, entity.transform.asMatrix());
 
             let lightingBindGroup: GPUBindGroup | undefined;
             if (mesh.material.isLit) {
                 lightingBindGroup = this.lightingBindGroups.get(mesh.material);
                 if (!lightingBindGroup) {
-                    lightingBindGroup = mesh.material.createLightingBindGroup(this.device, this.lighting.buffer);
+                    lightingBindGroup = mesh.material.createLightingBindGroup(this.device, this.lighting.buffer, this.cameraBuffer);
                     if (lightingBindGroup)
                         this.lightingBindGroups.set(mesh.material, lightingBindGroup);
                 }
