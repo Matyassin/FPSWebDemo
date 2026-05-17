@@ -1,6 +1,6 @@
 export class Time {
     private static _time: number = 0;
-    private static _deltaTime: number = 0;
+    private static _deltaTime: number = 1 / 60;
     private static lastTimeStamp: number = 0;
 
     public static get time(): number { return this._time; }

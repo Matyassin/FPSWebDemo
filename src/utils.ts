@@ -136,9 +136,10 @@ export class Color {
     public static readonly yellow  = new Color(1, 1, 0, 1);
 
     public static fromHex(hex: string): Color {
-        const r = parseInt(hex.slice(1, 3), 16) / 255;
-        const g = parseInt(hex.slice(3, 5), 16) / 255;
-        const b = parseInt(hex.slice(5, 7), 16) / 255;
+        const nHex = hex.startsWith('#') ? hex.slice(1) : hex;
+        const r = parseInt(nHex.slice(0, 2), 16) / 255;
+        const g = parseInt(nHex.slice(2, 4), 16) / 255;
+        const b = parseInt(nHex.slice(4, 6), 16) / 255;
 
         return new Color(r, g, b, 1);
     }
@@ -163,5 +164,13 @@ export class Mathf {
 
     public static radToDeg(rad: number): number {
         return rad * (180 / Math.PI);
+    }
+
+    public static eulerDeg(x: number, y: number, z: number): Vector3 {
+        return new Vector3(
+            this.degToRad(x),
+            this.degToRad(y),
+            this.degToRad(z)
+        );
     }
 }

@@ -1,6 +1,7 @@
-import { Renderer } from "./renderer.js";
-import { Input } from "./input.js";
+import { Debug, log } from "./debug.js";
 import { Time } from "./time.js";
+import { Input } from "./input.js";
+import { Renderer } from "./renderer.js";
 import { TestScene } from "./scene.js";
 
 async function main(): Promise<void> {
@@ -34,6 +35,8 @@ async function main(): Promise<void> {
         return;
     }
 
+    (window as any).debug = Debug;
+
     const textureFormat = navigator.gpu.getPreferredCanvasFormat();
     const fpsDisplay = document.getElementById('fps');
 
@@ -41,21 +44,24 @@ async function main(): Promise<void> {
     const testScene = new TestScene();
 
     await testScene.load(device, canvas, textureFormat);
+    log("Scene loaded");
 
     Input.init();
+    log("Input initialized");
 
     testScene.awake();
     testScene.start();
 
-    function gameLoop(timestamp: number): void {
-        fpsDisplay!.textContent = `FPS: ${Math.round(1 / Time.deltaTime)}`;
-
+    const gameLoop = (timestamp: number) => {
+        if (Debug.enableFps)
+            fpsDisplay!.textContent = `FPS: ${Math.round(1 / Time.deltaTime)}`;
+        
         testScene.update();
         renderer.drawFrame(testScene.mainCamera!, testScene.entites);
-
+        
         Input.endFrame();
         Time.update(timestamp);
-
+        
         requestAnimationFrame(gameLoop);
     }
 

@@ -1,6 +1,5 @@
 import { Mathf, Vector3 } from "../utils.js";
 import { Time } from "../time.js";
-import { Physics } from "../physics.js";
 import { Input, KeyCode } from "../input.js";
 import { ScriptComponent } from "../components/script.js";
 import { TransformComponent } from "../components/transform.js";
@@ -17,12 +16,12 @@ export class FPSController extends ScriptComponent {
 
     // ----- LOOK -----
     private lookSensitivity: number = 0.001;
-    private readonly maxPitch: number = 85;
+    private readonly maxPitchDeg: number = 85;
 
     // ----- MOVEMENT -----
-    private walkSpeed: number = 5;
-    private sprintSpeedMultiplier: number = 2;
-    private acceleration: number = 15;
+    private walkSpeed: number = 4;
+    private sprintSpeedMultiplier: number = 1.5;
+    private acceleration: number = 10;
     private currentVelocity: Vector3 = Vector3.zero;
 
     // ----- CROUCH -----
@@ -45,8 +44,8 @@ export class FPSController extends ScriptComponent {
         FPSController.instance = this;
         this.transform = this.entity.transform;
 
-        this.entity.transform.position = new Vector3(0, this.height * 0.75, 0);
-        this.crouchHeightOffset = this.height * 0.75;
+        this.entity.transform.position = new Vector3(0, this.height * 0.9, 0);
+        this.crouchHeightOffset = this.height * 0.9;
     }
     
     public override update(): void {
@@ -100,7 +99,7 @@ export class FPSController extends ScriptComponent {
     }
 
     private handleLook(): void {
-        const maxPitch: number = this.maxPitch * (Math.PI / 180);
+        const maxPitch: number = Mathf.degToRad(this.maxPitchDeg);
 
         this.transform.rotation.y -= Input.mouseDelta.x * this.lookSensitivity;
         this.transform.rotation.x -= Input.mouseDelta.y * this.lookSensitivity;
@@ -112,7 +111,7 @@ export class FPSController extends ScriptComponent {
 
         if (Input.getKeyDown(KeyCode.LeftCtr) && !this.isCrouching) {
             this.isCrouched = !this.isCrouched;
-            this.crouchHeightOffset = this.isCrouched ? this.height / 2 : this.height;
+            this.crouchHeightOffset = this.isCrouched ? this.height / 2 : this.height * 0.9;
         }
 
         this.transform.position.y = Mathf.lerp(

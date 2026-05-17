@@ -1,3 +1,5 @@
+import { error } from "./debug";
+
 export class Texture {
     public readonly gpuTexture: GPUTexture;
     public readonly sampler: GPUSampler;
@@ -7,10 +9,15 @@ export class Texture {
         this.sampler = sampler;
     }
 
-    public static async load(device: GPUDevice, path: string): Promise<Texture> {
+    public static async load(device: GPUDevice, path: string, format: GPUTextureFormat = 'rgba8unorm'): Promise<Texture> {
         const img = new Image();
         img.src = path;
-        await img.decode();
+        try {
+            await img.decode();
+        } 
+        catch (e) {
+            error(img.src + "failed decoding.")
+        }
 
         const bitmap: ImageBitmap = await createImageBitmap(img);
         const mipLevelCount = Texture.getMipLevelCount(bitmap.width, bitmap.height);
@@ -62,8 +69,10 @@ export class Texture {
             canvas.height = nextHeight;
             const ctx = canvas.getContext('2d');
             
-            if (!ctx)
-                throw new Error("Failed to create 2D context for texture mip generation.");
+            if (!ctx) {
+                error("Failed to create 2D context for texture mip generation.");
+                return;
+            }
 
             ctx.imageSmoothingEnabled = true;
             ctx.drawImage(source, 0, 0, width, height, 0, 0, nextWidth, nextHeight);
